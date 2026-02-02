@@ -1,11 +1,11 @@
 {
-  "name": "BasayWiFi",
+  "name": "Basay_ESP32_WiFiManager",
   "version": "1.0.0",
-  "description": "Универсальный WiFi менеджер для ESP",
+  "description": "Универсальный WiFi менеджер для ESP32",
   "keywords": "wifi, manager, captive portal, esp32, mdns",
   "repository": {
     "type": "git",
-    "url": "https://github.com"
+    "url": "https://github.com/Nidvorai4/Basay_ESP32_WiFiManager"
   },
   "frameworks": "arduino",
   "platforms": "espressif32",
@@ -13,8 +13,9 @@
     "srcDir": "src"
   },
   "dependencies": {
-    "me-no-dev/ESPAsyncWebServer": "*",
+    "ottowinter/ESPAsyncWebServer-esphome": "^3.1.0",
     "esphome/AsyncTCP-esphome": "*",
-    "bblanchon/ArduinoJson": "^6.21.3"
+    "bblanchon/ArduinoJson": "^6.21.3",
+    "bbx10/DNSServer": "^1.1.0"
   }
 }
