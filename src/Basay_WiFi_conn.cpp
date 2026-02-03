@@ -1,17 +1,17 @@
 #include "Basay_WiFi_conn.h"
 #include <Preferences.h>
 
+
 AsyncWebServer server(80);
 DNSServer dnsServer;
 Preferences wifiPrefs;
 
-bool BasayWiFiManager::begin(const char* apName, const char* hostName, const char* rebootMsg, const char* customHtml) {
+bool BasayWiFiManager::begin(const char* apName, const char* hostName, const char* rebootMsg) {
     _rebootMsg = rebootMsg;
-    _userHtml = customHtml;
+    BASAY_LOGLN("\n[WM] --- Start ---");
     
     uint64_t mac = ESP.getEfuseMac();
-    String macId = String((uint32_t)(mac >> 32), HEX);
-    macId += String((uint32_t)mac, HEX);
+    String macId = String((uint32_t)(mac >> 32), HEX) + String((uint32_t)mac, HEX);
     _finalHostname = String(hostName) + "_" + macId.substring(macId.length() - 4);
     _finalHostname.toLowerCase();
 
@@ -21,47 +21,57 @@ bool BasayWiFiManager::begin(const char* apName, const char* hostName, const cha
     wifiPrefs.end();
 
     if (s != "") {
+        BASAY_LOGF("[WM] Connecting to STA: %s\n", s.c_str());
         WiFi.mode(WIFI_STA);
         WiFi.setHostname(_finalHostname.c_str()); 
         WiFi.begin(s.c_str(), p.c_str());
-        
         unsigned long start = millis();
-        while (WiFi.status() != WL_CONNECTED && millis() - start < 10000) { delay(500); BASAY_LOG("."); }
+        while (WiFi.status() != WL_CONNECTED && millis() - start < 10000) { 
+            delay(500); BASAY_LOG("."); 
+        }
+        BASAY_LOGLN("");
     }
 
+    server.on("/BasayWiFi_reset", HTTP_GET, [this](AsyncWebServerRequest *r){
+        r->send(200, "text/plain", "Resetting...");
+        this->resetSettings();
+    });
+
     if (WiFi.status() == WL_CONNECTED) {
+        BASAY_LOGLN("[WM] STA Connected");
         if (MDNS.begin(_finalHostname.c_str())) MDNS.addService("http", "tcp", 80);
-        server.on("/", HTTP_GET, [](AsyncWebServerRequest *r){ r->send(200, "text/html", WiFiConnectedIndex_html); });
-        server.on("/reset_now", HTTP_GET, [this](AsyncWebServerRequest *r){
-            r->send(200, "text/plain", "Resetting...");
-            this->resetSettings();
-        });
-        return true;
+        return true; 
     } else {
+        BASAY_LOGLN("[WM] STA Fail. AP Mode On...");
         WiFi.mode(WIFI_AP);
-        IPAddress apIP(192, 168, 4, 1);
+        IPAddress apIP;
+        apIP.fromString(BASAY_WIFI_IP_STR);
         WiFi.softAPConfig(apIP, apIP, IPAddress(255, 255, 255, 0));
         WiFi.softAP(apName);
         dnsServer.start(53, "*", apIP);
 
-        // Главная страница: либо пользовательская, либо стандартная
-        server.on("/", HTTP_GET, [this](AsyncWebServerRequest *r){ 
-            if(_userHtml) r->send(200, "text/html", _userHtml);
-            else r->send(200, "text/html", WorkWithoutWiFi_html); 
+        server.on("/favicon.ico", HTTP_GET, [](AsyncWebServerRequest *r){ r->send(204); });
+
+        server.on("/BasayWiFi_CloseCaptivePortal", HTTP_GET, [this](AsyncWebServerRequest *r){
+            this->isCaptiveModeDisabled = true; 
+            BASAY_LOGLN("[WM] CAPTIVE PORTAL DISABLED: Unlocking access");
+            r->send(204); 
         });
 
-        // Новый уникальный путь для настройки
-        server.on("/BasayWiFiSetup", HTTP_GET, [](AsyncWebServerRequest *r){ r->send(200, "text/html", WiFiSetup_html); });
+        server.on("/BasayWiFi_AP_WelcomeScreen", HTTP_GET, [this](AsyncWebServerRequest *r){
+            String page = String(BasayWiFi_AP_WelcomeScreen_html);
+            page.replace("{HOSTNAME}", _finalHostname);
+            page.replace("BASAY_LOCAL_IP_ADDR", BASAY_WIFI_IP_STR);
+            r->send(200, "text/html", page);
+        });
 
-        // Исправленные ловушки: теперь кидают на главную (на страницу пользователя)
-        server.on("/generate_204", HTTP_GET, [](AsyncWebServerRequest *r){ r->redirect("/"); });
-        server.on("/gen_204", HTTP_GET, [](AsyncWebServerRequest *r){ r->redirect("/"); });
-        server.on("/hotspot-detect.html", HTTP_GET, [](AsyncWebServerRequest *r){ r->redirect("/"); });
+        server.on("/BasayWiFiSetup", HTTP_GET, [](AsyncWebServerRequest *r){ 
+            r->send(200, "text/html", WiFiSetup_html); 
+        });
 
-        server.on("/scan", HTTP_GET, [](AsyncWebServerRequest *r){
+        server.on("/BasayWiFi_scan", HTTP_GET, [](AsyncWebServerRequest *r){
             int n = WiFi.scanComplete();
             if (n == -2) { WiFi.scanNetworks(true); r->send(202); }
-            else if (n == -1) { r->send(202); }
             else {
                 String json = "[";
                 for (int i = 0; i < n; ++i) {
@@ -69,38 +79,56 @@ bool BasayWiFiManager::begin(const char* apName, const char* hostName, const cha
                     json += "{\"ssid\":\"" + WiFi.SSID(i) + "\",\"rssi\":" + String(WiFi.RSSI(i)) + "}";
                 }
                 json += "]";
-                WiFi.scanDelete(); r->send(200, "application/json", json);
+                WiFi.scanDelete(); 
+                r->send(200, "application/json", json);
             }
         });
 
-        server.on("/save", HTTP_POST, [this](AsyncWebServerRequest *r){
+        server.on("/BasayWiFi_save", HTTP_POST, [this](AsyncWebServerRequest *r){
             String targetSSID = r->hasArg("s_select") && r->arg("s_select") != "" ? r->arg("s_select") : r->arg("s_manual");
             if (targetSSID != "") {
                 Preferences p_write; p_write.begin("basay_wifi", false);
-                p_write.putString("Basay_WiFi_Name", targetSSID); p_write.putString("Basay_WiFi_PSWD", r->arg("p"));
+                p_write.putString("Basay_WiFi_Name", targetSSID); 
+                p_write.putString("Basay_WiFi_PSWD", r->arg("p"));
                 p_write.end();
-                
-                String fullAddr = "http://" + _finalHostname + ".local";
-                String h = "<!DOCTYPE HTML><html style='background:#121212;color:#e0e0e0;font-family:sans-serif;text-align:center;padding:20px;'>";
-                h += "<body style='display:flex;justify-content:center;align-items:center;height:90vh;'><div style='background:#1e1e1e;padding:30px;border-radius:20px;border:1px solid #444;max-width:400px;'>";
-                h += "<h2>Запомни адрес!</h2><p>" + String(_rebootMsg) + "</p>";
-                h += "<div style='background:#000;padding:10px;border-radius:10px;margin:20px 0;border:1px dashed #3f8cff;position:relative;'>";
-                h += "<span id='addr' style='color:#3f8cff;font-size:18px;word-break:break-all;'>" + fullAddr + "</span>";
-                h += "<br><small id='copyBtn' onclick='copyToClipboard()' style='color:#ff9f43;cursor:pointer;text-decoration:underline;font-size:12px;'>[копировать]</small></div>";
-                h += "<button onclick=\"this.disabled=true;this.innerHTML='Жди...';fetch('/do_reboot')\" style='background:#28a745;color:white;border:none;padding:15px 30px;border-radius:10px;font-size:20px;cursor:pointer;width:100%;'>Я ПОНЯЛ, ЖМИ!</button></div>";
-                h += "<script>function copyToClipboard(){var t=document.createElement('input');t.value='"+fullAddr+"';document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);";
-                h += "var b=document.getElementById('copyBtn');b.innerHTML='СКОПИРОВАНО!';b.style.color='#28a745';setTimeout(()=>{b.innerHTML='[копировать]';b.style.color='#ff9f43';},2000);}</script></body></html>";
-                r->send(200, "text/html", h);
+                r->send(200, "text/html", "Saved. Rebooting..."); 
+                delay(1000); ESP.restart();
             } else r->send(400);
         });
 
-        server.on("/do_reboot", HTTP_GET, [](AsyncWebServerRequest *r){ r->send(200, "text/plain", "OK"); delay(500); ESP.restart(); });
-        server.onNotFound([](AsyncWebServerRequest *r){ r->redirect("/"); });
+        server.on("/generate_204", HTTP_GET, [this](AsyncWebServerRequest *r){
+            if (this->isCaptiveModeDisabled) r->send(204); 
+            else r->redirect("/BasayWiFi_AP_WelcomeScreen");
+        });
+
+        server.on("/hotspot-detect.html", HTTP_GET, [this](AsyncWebServerRequest *r){
+            if (this->isCaptiveModeDisabled) r->send(200, "text/html", "Success"); 
+            else r->redirect("/BasayWiFi_AP_WelcomeScreen");
+        });
+
+        server.onNotFound([this](AsyncWebServerRequest *r){ 
+            if (this->isCaptiveModeDisabled) {
+                if (r->url().indexOf("generate_204") >= 0) r->send(204);
+                else r->send(404);
+            } else r->redirect("/BasayWiFi_AP_WelcomeScreen"); 
+        });
+
         return false;
     }
 }
 
-void BasayWiFiManager::handle() { if (WiFi.getMode() == WIFI_AP) dnsServer.processNextRequest(); }
-void BasayWiFiManager::resetSettings() { wifiPrefs.begin("basay_wifi", false); wifiPrefs.clear(); wifiPrefs.end(); delay(500); ESP.restart(); }
+void BasayWiFiManager::handle() { 
+    if (WiFi.getMode() == WIFI_AP && !isCaptiveModeDisabled) {
+        dnsServer.processNextRequest(); 
+    }
+}
+
+void BasayWiFiManager::resetSettings() { 
+    wifiPrefs.begin("basay_wifi", false); 
+    wifiPrefs.clear(); 
+    wifiPrefs.end(); 
+    delay(500); 
+    ESP.restart(); 
+}
 
 BasayWiFiManager BasayWiFi;

@@ -1,0 +1,81 @@
+#ifndef PAGES_H
+#define PAGES_H
+#include <Arduino.h>
+
+// Общий стиль:Viewport для масштаба + жирные шрифты + крупные кнопки
+const char STYLE[] PROGMEM = R"rawliteral(
+  <meta charset='UTF-8'>
+  <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'>
+  <style>
+    body {
+      background: #121212; 
+      color: #fff; 
+      text-align: center; 
+      font-family: sans-serif; 
+      margin: 0; 
+      padding: 20px;
+    }
+    h1 { font-size: 24px; margin-bottom: 20px; }
+    .btn {
+      display: block;
+      padding: 20px;
+      margin: 15px auto;
+      background: #007bff;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 12px;
+      font-size: 18px;
+      font-weight: bold;
+      max-width: 300px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    }
+    input[type=checkbox] {
+      transform: scale(2.5);
+      margin: 40px;
+    }
+    input[type=range] {
+      width: 100%;
+      max-width: 300px;
+      height: 40px;
+      margin: 20px 0;
+    }
+    hr { border: 0; border-top: 1px solid #333; margin: 30px 0; }
+  </style>
+)rawliteral";
+
+// Страница AP
+const char PAGE_AP[] PROGMEM = R"rawliteral(
+  <h1>Настройка</h1>
+  <a href="/led/1" class="btn">ВКЛЮЧИТЬ</a>
+  <a href="/led/0" class="btn">ВЫКЛЮЧИТЬ</a>
+  <a href="/BasayWiFiSetup" class="btn" style="background:#ff9f43">WI-FI СЕТЬ</a>
+)rawliteral";
+
+// Главная STA
+const char PAGE_STA_MAIN[] PROGMEM = R"rawliteral(
+  <h1>Управление</h1>
+  <a href="/led/1" class="btn">ВКЛЮЧИТЬ</a>
+  <a href="/led/0" class="btn">ВЫКЛЮЧИТЬ</a>
+  <hr>
+  <a href="/checkbox" class="btn">ЧЕКБОКС</a>
+  <a href="/blink" class="btn">МИГАНИЕ</a>
+  <a href="/BasayWiFi_reset" class="btn" style="background:#dc3545">СБРОС WI-FI</a>
+)rawliteral";
+
+// Страница Чекбокса
+const char PAGE_STA_CHECK[] PROGMEM = R"rawliteral(
+  <h1>Чекбокс</h1>
+  <input type="checkbox" id="c" onchange="location.href='/led_toggle?v='+(this.checked?1:0)">
+  <a href="/" class="btn" style="background:#555">НАЗАД</a>
+)rawliteral";
+
+// Страница Мигания
+const char PAGE_STA_BLINK[] PROGMEM = R"rawliteral(
+  <h1>Мигание</h1>
+  <a href="/blink_toggle" class="btn" style="background:#28a745">ВКЛ / ВЫКЛ</a>
+  <p>Скорость:</p>
+  <input type="range" min="0" max="100" onchange="location.href='/set_speed?s='+this.value">
+  <a href="/" class="btn" style="background:#555">НАЗАД</a>
+)rawliteral";
+
+#endif
