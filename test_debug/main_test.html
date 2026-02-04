@@ -1,0 +1,59 @@
+#ifndef MAIN_TEST_H
+#define MAIN_TEST_H
+#include <Arduino.h>
+
+// Страница для режима Точки Доступа (Автономно)
+const char PAGE_AP_TEST[] PROGMEM = R"=====(
+<!DOCTYPE HTML><html><head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    body { background: #002b36; color: #839496; font-family: sans-serif; text-align: center; padding: 50px 20px; }
+    .status { background: #b58900; color: #002b36; padding: 10px; border-radius: 8px; font-weight: bold; display: inline-block; }
+    h1 { color: #268bd2; }
+  </style>
+</head><body>
+  <div class="status">РЕЖИМ: АВТОНОМНО</div>
+  <h1>ESP32-C3 APP</h1>
+  <p>Вы успешно вышли из портала и открыли приложение по IP 10.69.69.10</p>
+  <hr style="border: 0; border-top: 1px solid #586e75; margin: 20px 0;">
+  <p>Устройство работает без подключения к интернету.</p>
+</body></html>
+)=====";
+
+// Страница для режима Роутера (STA)
+const char PAGE_STA_TEST[] PROGMEM = R"=====(
+<!DOCTYPE HTML><html><head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    body { background: #1c1c1c; color: #d0d0d0; font-family: sans-serif; text-align: center; padding: 50px 20px; }
+    .card { background: #262626; padding: 30px; border-radius: 16px; border: 1px solid #333; max-width: 400px; margin: auto; }
+    .status { background: #28a745; color: white; padding: 10px; border-radius: 8px; font-weight: bold; display: inline-block; margin-bottom: 20px; }
+    h1 { color: #3f8cff; }
+    .btn-reset { background: #dc3545; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; margin-top: 25px; transition: 0.3s; }
+    .btn-reset:hover { background: #a71d2a; }
+  </style>
+</head><body>
+  <div class="card">
+    <div class="status">РЕЖИМ: В СЕТИ (STA)</div>
+    <h1>ДОМАШНИЙ ПУЛЬТ</h1>
+    <p>Устройство успешно подключено к вашему роутеру.</p>
+    <p>Доступно по псевдониму .local или IP роутера.</p>
+    
+    <hr style="border: 0; border-top: 1px solid #444; margin: 20px 0;">
+    
+    <button class="btn-reset" onclick="resetWiFi()">СБРОСИТЬ WI-FI</button>
+  </div>
+
+  <script>
+    function resetWiFi() {
+      if(confirm('Вы уверены? Устройство забудет сеть и уйдет в перезагрузку.')) {
+        fetch('/BasayWiFi_reset').then(() => {
+          alert('Настройки сброшены. Устройство перезагружается...');
+        });
+      }
+    }
+  </script>
+</body></html>
+)=====";
+
+#endif

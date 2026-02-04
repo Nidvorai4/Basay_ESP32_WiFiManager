@@ -1,159 +1,237 @@
-#ifndef BASAY_WIFI_HTML_H
-#define BASAY_WIFI_HTML_H
+#ifndef WIFI_HTML_H
+#define WIFI_HTML_H
 #include <Arduino.h>
 
-
-const char BasayWiFi_AP_WelcomeScreen_html[] PROGMEM = R"=====(
-<!DOCTYPE HTML><html lang='ru'><head>
+const char BasayWiFi_AP_WelcomeScreen_html[] PROGMEM = R"=====(<!DOCTYPE HTML><html lang='ru'><head>
 <meta charset='UTF-8'><meta name='viewport' content='width=device-width,initial-scale=1'>
 <style>
-  body{background:#121212;color:#e0e0e0;font-family:sans-serif;text-align:center;display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;}
-  .card{background:#1e1e1e;padding:30px;border-radius:20px;border:1px solid #333;width:90%;max-width:400px;box-shadow:0 10px 30px rgba(0,0,0,0.5);}
-  h2{color:#ff9800;margin-top:0;}
-  .info{background:#000;padding:20px;border-radius:12px;margin:20px 0;text-align:left;border:1px solid #444;position:relative;}
-  code{color:#3f8cff;font-size:1.1em;word-break:break-all;display:inline-block;margin-top:8px;}
-  
-  /* Анимация кнопки */
-  @keyframes grow {
-    0% { transform: scale(0); opacity: 0; }
-    100% { transform: scale(1); opacity: 1; }
+  @keyframes wobble-stretch {
+    0%, 100% { transform: scale(1) rotate(0deg); }
+    25% { transform: scale(1.05, 0.9) rotate(-1deg); }
+    50% { transform: scale(0.95, 1.1) rotate(1deg); }
+    75% { transform: scale(1.05, 0.9) rotate(-1deg); }
   }
-  .btn{display:block;width:100%;padding:15px;margin:10px 0;border-radius:12px;border:none;font-size:16px;font-weight:bold;cursor:pointer;text-decoration:none;transition:0.2s;box-sizing:border-box;}
-  .btn-go{background:#28a745;color:#fff;animation:grow 2s ease-out forwards; overflow:hidden; white-space:nowrap;}
-  .btn-setup{background:#3f8cff;color:#fff;}
+  @keyframes fadeInScale {
+    0% { opacity: 0; transform: scale(0.1); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+  body{background:#121212;color:#e0e0e0;font-family:sans-serif;text-align:center;display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;flex-direction:column;}
+  .card{background:#1e1e1e;padding:30px;border-radius:20px;border:1px solid #333;width:90%;max-width:400px;box-shadow:0 10px 30px rgba(0,0,0,0.5);margin-bottom:20px;}
+  h2{color:#ff9800;margin-top:0;}
   
-  .cp-btn{background:#333;color:#fff;font-size:10px;padding:5px 10px;border-radius:4px;cursor:pointer;float:right;border:1px solid #555;}
-  .label{font-size:0.85em; color:#888;}
+  .info{
+    background:#000;
+    padding:20px;
+    border-radius:12px;
+    margin:20px 0 20px 0;
+    text-align:left;
+    border:1px solid #444;
+    position:relative;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  
+  .instruction {
+  font-size: 0.9em;
+  color: #777;
+  line-height: 1.4;
+  margin: 10px 0;
+  }
+  .label{font-size:0.85em;color:#888;line-height:1.2;}
+  
+  .cp-btn{
+    background:#227813;
+    color:#fff;
+    font-size:11px;
+    padding:10px 10px;
+    border-radius:6px;
+    cursor:pointer;
+    border:none;
+    font-weight:bold;
+    transition:0.2s;
+    text-transform:uppercase;
+    margin:0;
+    position:absolute;
+    right:20px;
+    top: 50%;
+    transform: translateY(-50%);
+    text-align: center;
+    line-height: 1.2;
+  }
+  .cp-btn:active{transform:translateY(-50%) scale(0.95);background:#555;}
+  
+  code{color:#43fa23;font-size:1.2em;word-break:break-all;margin:0;line-height:1.2;padding-right:100px;}
+  
+  .btn{display:block;width:90%;max-width:400px;padding:30px 15px;border-radius:12px;border:none;font-size:15px;font-weight:bold;cursor:pointer;text-decoration:none;transition:0.2s;box-sizing:border-box;margin:10px auto;line-height:1;display:flex;align-items:center;justify-content:center;}
+  .btn-go{background:#28a745;color:#fff;animation: fadeInScale 3s ease-out, wobble-stretch 2s infinite 3s ease-in-out;font-size: 20px;}
+  
+  /* Уменьшенная кнопка настройки */
+  .btn-setup{background:#3f8cff;color:#fff;padding:12px 15px;font-size:12px;width:auto;display:inline-flex;}
+  
+  .check-row{margin-top:20px;padding-top:15px;border-top:1px solid #333;display:flex;align-items:center;gap:12px;cursor:pointer;}
 </style>
-</head><body><div class='card'>
-  <h2>Автономный режим</h2>
-  <p style='font-size:0.9em;opacity:0.8;'>Сеть ESP готова к работе.</p>
-  
+</head><body>
+
+<div class='card'>
+  <h2>Работа в атономном режиме</h2>
+  <p class='instruction'>
+    Сейчас устройство само раздаёт WiFi (без этих ваших интернетов). 
+    Для доступа к управлению скопируйте адрес ниже, нажмите "Продолжить работу без подкючения к роутеру", закройте это окно и вставьте ссылку в браузер телефона.
+  </p>
   <div class='info'>
     <span class='label'>Адрес устройства:</span>
-    <button class='cp-btn' onclick="cp('http://BASAY_LOCAL_IP_ADDR/')">COPY</button><br>
     <code>http://BASAY_LOCAL_IP_ADDR/</code>
+    <button class='cp-btn' onclick="cp('http://BASAY_LOCAL_IP_ADDR/')">Копировать<br>адрес</button>
   </div>
-
-  <a href='http://BASAY_LOCAL_IP_ADDR/' class='btn btn-go' onclick="forceClose()">ОТКРЫТЬ ПРИЛОЖЕНИЕ</a>
-  <a href='/BasayWiFiSetup' class='btn btn-setup'>НАСТРОЙКИ WI-FI</a>
+  <a href='/BasayWiFi_GoApp' class='btn btn-go'>Продолжить работу без подключения к роутеру</a>
+  
+  
+  <label class='check-row'>
+    <input type="checkbox" onchange="fetch('/Basay_NoCP_Save?v='+(this.checked?0:1))" style="transform:scale(1.3);">
+    <span>Больше не показывать это окно</span>
+  </label>
 </div>
 
-<input type="text" id="copyBuffer" style="position:absolute; left:-9999px;">
-
+<div class='card'>
+<p class='instruction'>
+    Если нужно, чтобы устройство подключалось к домашней сети - это можно сделать кнопкой ниже.
+  </p>
+  <a href='/BasayWiFiSetup' class='btn btn-setup'>ПОДКЛЮЧИТЬСЯ К РОУТЕРУ</a>
+</div>
+<input type="text" id="copyBuffer" style="position:absolute;left:-9999px;">
 <script>
-  // Сразу при открытии страницы "втихую" открываем шлюз на ESP
-  window.onload = function() {
-    fetch('/BasayWiFi_CloseCaptivePortal');
-    fetch('/generate_204');
-  };
-
-  function cp(text){
-    var bf = document.getElementById('copyBuffer');
-    bf.value = text;
-    bf.select();
-    document.execCommand('copy');
-    alert('Скопировано');
-  }
-
-  // Дополнительная попытка закрыть окно при клике
-  function forceClose() {
-    setTimeout(() => {
-      location.href = 'http://connectivitycheck.gstatic.com';
-    }, 1000);
+  function cp(t){
+    var b=document.getElementById('copyBuffer');
+    b.value=t;b.select();document.execCommand('copy');
+    alert('Адрес скопирован!');
   }
 </script>
-</body></html>
-)=====";
+</body></html>)=====";
 
 
-
-
-static const char WiFiSetup_html[] PROGMEM = R"rawliteral(
+const char WiFiSetup_html[] PROGMEM = R"rawliteral(
 <!DOCTYPE HTML><html><head>
   <meta charset="UTF-8"><title>Настройка Wi-Fi</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <style>
-    body { font-family: -apple-system, sans-serif; background: #121212; color: #e0e0e0; text-align: center; padding: 20px; margin: 0; overflow-x: hidden; }
-    .card { background: #1e1e1e; padding: 25px; border-radius: 16px; max-width: 380px; margin: auto; border: 1px solid #333; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-    select, input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; background: #2a2a2a; color: #fff; border: 1px solid #444; font-size: 16px; box-sizing: border-box; outline: none; }
-    .pass-wrapper { position: relative; width: 100%; }
-    .eye { position: absolute; right: 12px; top: 20px; cursor: pointer; color: #777; font-size: 18px; z-index: 2; }
+    /* Анимации */
+    @keyframes fadeInScale {
+      0% { opacity: 0; transform: scale(0.8); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    @keyframes wobble-stretch {
+      0%, 100% { transform: scale(1); }
+      25% { transform: scale(1.05) rotate(1deg); }
+      50% { transform: scale(0.95) rotate(-1deg); }
+      75% { transform: scale(1.02) rotate(0.5deg); }
+    }
+
+    body { font-family: sans-serif; background: #121212; color: #e0e0e0; text-align: center; padding: 20px; margin: 0; }
+    .card { background: #1e1e1e; padding: 25px; border-radius: 16px; max-width: 380px; margin: 10px auto; border: 1px solid #333; }
+    select, input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; background: #2a2a2a; color: #fff; border: 1px solid #444; font-size: 16px; box-sizing: border-box; }
     .btn { background: #28a745; color: white; border: none; padding: 14px; width: 100%; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 15px; }
     .btn:disabled { background: #333; color: #666; }
-    .link { color: #3f8cff; text-decoration: none; font-size: 14px; cursor: pointer; display: block; margin: 12px 0; }
+    .link { color: #3f8cff; text-decoration: none; font-size: 14px; cursor: pointer; display: block; margin: 15px 0; }
     .hidden { display: none; }
-    .status { color: #ff9f43; font-size: 13px; margin-bottom: 10px; height: 18px; }
-    @keyframes shakeH { 0%, 100% { transform: translateX(0); } 25% { transform: translate(-2px, 1px); } 75% { transform: translate(2px, -1px); } }
-    @keyframes shakeV { 0%, 100% { transform: translateY(0); } 33% { transform: translate(1px, -2px); } 66% { transform: translate(-1px, 2px); } }
-    @keyframes shakeRot { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(1deg); } 75% { transform: rotate(-1deg); } }
-    .shaking h2 { animation: shakeH 0.15s infinite; color: #ff9f43; }
-    .shaking select { animation: shakeRot 0.25s infinite; }
-    .shaking .pass-wrapper { animation: shakeV 0.2s infinite; }
+    .status { color: #ff9f43; font-size: 13px; margin-bottom: 10px; }
+    
+    .hostname-box { background: #252525; padding: 10px; border-radius: 8px; border: 1px dashed #555; margin: 15px 0; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .hostname-text { font-family: monospace; color: #00ff41; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .instruction { font-size: 0.9em; color: #777; line-height: 1.4; margin: 10px 0; }
+
+    /* Кнопка с анимацией */
+    .btn-cpy-move {
+      background: #28a745;
+      color: #fff;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: bold;
+      white-space: nowrap;
+      /* Появление за 3 сек, затем бесконечный воббл с задержкой 3 сек */
+      animation: fadeInScale 3s ease-out, wobble-stretch 2s infinite 3s ease-in-out;
+    }
   </style>
 </head><body>
-  <div class="card" id="mainCard">
+  <textarea id="copyBuffer" style="position:absolute;left:-9999px;opacity:0"></textarea>
+
+  <div class="card">
+    <p class="instruction">Имя устройства в сети:</p>
+    <div class="hostname-box">
+      <span class="hostname-text" id="hn">{{HOSTNAME}}</span>
+      <button class="btn-cpy-move" onclick="cp(document.getElementById('hn').innerText)">Копировать</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <a href="/BasayWiFi_AP_WelcomeScreen" class="link" style="text-align:left; margin-top:0;">&larr; Назад</a>
     <h2>Настройка сети</h2>
     <div id="st" class="status">Поиск сетей...</div>
     <form action="/BasayWiFi_save" method="POST" oninput="validate()">
       <div id="scan_block">
         <select name="s_select" id="nets"><option value="">Загрузка...</option></select>
-        <div class="link" onclick="toggleManual(true)">Ввести SSID вручную</div>
+        <div class="link" onclick="toggleManual(true)">Ввести название вручную</div>
       </div>
       <div id="manual_block" class="hidden">
         <input type="text" name="s_manual" id="manual_ssid" placeholder="Название (SSID) сети">
-        <div class="link" onclick="toggleManual(false)">Вернуться к списку</div>
+        <div class="link" onclick="toggleManual(false)">К списку сетей</div>
       </div>
-      <div class="pass-wrapper">
-        <input type="password" name="p" id="pass_input" placeholder="Пароль">
-        <span class="eye" id="eye_icon" onclick="togglePass()">👁️</span>
-      </div>
+      <input type="password" name="p" id="pass" placeholder="Пароль">
       <input type="submit" id="subBtn" class="btn" value="Подключить" disabled>
     </form>
-    <div class="link" style="color: #777;" onclick="location.href='/'">Отмена</div>
   </div>
+
   <script>
+    function cp(t) {
+      var b = document.getElementById('copyBuffer');
+      b.value = t;
+      b.select();
+      b.setSelectionRange(0, 99999);
+      try {
+        document.execCommand('copy');
+        var btn = document.querySelector('.btn-cpy-move');
+        var old = btn.innerText;
+        btn.innerText = 'ОК!';
+        setTimeout(function(){ btn.innerText = old; }, 1500);
+      } catch (err) {
+        alert('Ошибка при копировании');
+      }
+    }
+
     let isManual = false;
     function validate() {
       const s = document.getElementById('nets').value;
       const m = document.getElementById('manual_ssid').value;
       document.getElementById('subBtn').disabled = (isManual ? !m : !s);
     }
-    function togglePass() {
-      const i = document.getElementById('pass_input');
-      i.type = (i.type === 'password') ? 'text' : 'password';
-      document.getElementById('eye_icon').innerHTML = (i.type === 'password') ? '👁️' : '🙈';
-    }
     function toggleManual(m) {
       isManual = m;
       document.getElementById('scan_block').classList.toggle('hidden', m);
       document.getElementById('manual_block').classList.toggle('hidden', !m);
-      if(!m) fetchNetworks();
       validate();
     }
     function fetchNetworks() {
-      if(isManual) return;
       fetch('/BasayWiFi_scan').then(res => {
         if (res.status === 200) return res.json();
-        if (res.status === 202) { 
-          document.getElementById('st').innerHTML = "Сканирование эфира...";
-          document.getElementById('mainCard').classList.add('shaking');
-          setTimeout(fetchNetworks, 1500); return null; 
-        }
+        setTimeout(fetchNetworks, 2000);
       }).then(data => {
         if (!data) return;
-        document.getElementById('mainCard').classList.remove('shaking');
         let s = document.getElementById('nets'); s.innerHTML = "<option value=''>Выберите сеть...</option>";
         data.sort((a,b) => b.rssi - a.rssi).forEach(n => {
           let o = document.createElement('option'); o.value = n.ssid;
           o.innerHTML = n.ssid + " (" + n.rssi + " dBm)"; s.appendChild(o);
         });
-        document.getElementById('st').innerHTML = "Выберите вашу сеть";
-        validate();
-      }).catch(() => { setTimeout(fetchNetworks, 3000); });
+        document.getElementById('st').innerHTML = "Сети найдены";
+      });
     }
     window.onload = fetchNetworks;
   </script>
-</body></html>)rawliteral";
+</body></html>
+
+
+)rawliteral";
 
 #endif

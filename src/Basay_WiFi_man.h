@@ -1,5 +1,5 @@
-#ifndef BASAY_WIFI_CONN_H
-#define BASAY_WIFI_CONN_H
+#ifndef BASAY_WIFI_MAN_H
+#define BASAY_WIFI_MAN_H
 
 #include <ESPAsyncWebServer.h>
 #include <DNSServer.h>
@@ -28,8 +28,7 @@ extern DNSServer dnsServer;
 class BasayWiFiManager {
 public:
     bool begin(const char* apName = "Basay_Node_Config", 
-               const char* hostName = "basay", 
-               const char* rebootMsg = "Настройки сохранены!");
+               const char* hostName = "basay");
 
     bool isAP() {  return (WiFi.status() != WL_CONNECTED); }
     void handle(); 
@@ -39,6 +38,7 @@ private:
     String _finalHostname;
     const char* _rebootMsg;
     bool isCaptiveModeDisabled = false;
+    bool BasayWiFi_ShowCaptivePortal = true;
 };
 
 extern BasayWiFiManager BasayWiFi;
