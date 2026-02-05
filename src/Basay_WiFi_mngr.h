@@ -5,7 +5,7 @@
 #include <DNSServer.h>
 #include <WiFi.h>
 #include <ESPmDNS.h>
-#include "Basay_WiFi.html"
+#include "Basay_WiFi_mngr.html"
 
 
 #define BASAY_WIFI_IP_STR "10.69.69.10"
