@@ -39,6 +39,7 @@ void loop() {
     
     if (millis() - imAlive > 10000) {
         imAlive = millis();
-        Serial.println("im alive");
+        Serial.print("im alive " );
+        Serial.println(BASAY_WIFI_MAN_VERSION);
     }
 }

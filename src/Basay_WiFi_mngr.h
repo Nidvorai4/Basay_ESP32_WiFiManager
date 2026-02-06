@@ -7,7 +7,7 @@
 #include <ESPmDNS.h>
 #include "Basay_WiFi_mngr.html"
 
-
+#define BASAY_WIFI_MAN_VERSION "v1.0.0"
 #define BASAY_WIFI_IP_STR "10.69.69.10"
 
 //#define BASAY_DEBUG 
