@@ -5,9 +5,13 @@
 unsigned long imAlive;
 
 void setup() {
-    delay(2000);
+    delay(5000); 
     Serial.begin(115200);
-    delay(2000);
+    unsigned long start = millis();
+    while (!Serial && (millis() - start < 3000)) {
+        delay(10);
+    }
+    delay(3000); 
     Serial.println("Стартанулося");
 
     // Инициализация либы.

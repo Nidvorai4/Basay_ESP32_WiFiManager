@@ -47,7 +47,14 @@ void BasayWiFiManager::begin(const char* apName, const char* hostName) {
         server.on("/favicon.ico", HTTP_GET, [](AsyncWebServerRequest *r){ r->send(204); });
         server.on("/BasayWiFi_scan", HTTP_GET, [](AsyncWebServerRequest *r){
         int n = WiFi.scanComplete();
-        if (n == -2) { WiFi.scanNetworks(true); r->send(202); }
+        if (n == -2) {
+            // ХИТРОСТЬ: Перед сканом принудительно останавливаем фоновые попытки подключения
+            // Это освобождает радиомодуль для быстрого сканирования
+            if (WiFi.status() != WL_CONNECTED) {
+                WiFi.disconnect(); 
+            } 
+            WiFi.scanNetworks(true); r->send(202); 
+        }
         else if (n == -1) { r->send(202); }
         else {
             String json = "[";
@@ -58,7 +65,7 @@ void BasayWiFiManager::begin(const char* apName, const char* hostName) {
                 json += "{\"ssid\":\"" + ssid + "\",\"rssi\":" + String(WiFi.RSSI(i)) + "}";
             }
             json += "]";
-            WiFi.scanDelete(); r->send(200, "application/json", json);
+            r->send(200, "application/json", json); WiFi.scanDelete();
             
         }
         });
