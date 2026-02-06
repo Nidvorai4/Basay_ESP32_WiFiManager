@@ -1,0 +1,12 @@
+ВОТКНУТЬ БЛЯТЬ В ЮСБ 2.0!!!!!!!! Часа три убил. На 3.0 не заводится
+
+Через какой-то Zadig установить дрова.
+Options - List all dev
+выбрать USB JTAG/serial debug unit (Interface 2) 
+накатить WinUSB (v6.1.7600.16385)
+
+
+в ини прописать 
+debug_tool = esp-builtin ; Использовать встроенный JTAG через USB
+
+

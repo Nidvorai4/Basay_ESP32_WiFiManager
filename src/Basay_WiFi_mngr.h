@@ -22,23 +22,46 @@
   #define BASAY_LOGF(...)
 #endif
 
-extern AsyncWebServer server;
-extern DNSServer dnsServer;
+
+
 
 class BasayWiFiManager {
 public:
-    bool begin(const char* apName = "Basay_Node_Config", 
+    AsyncWebServer server;    
+    BasayWiFiManager() : server(80) {}
+    // Определяем тип функции коллбэка
+    typedef void (*BasayWiFi_RouterStatus_Callback)();
+
+    //для регистрации коллбэка отвала сети пользователем
+    void onRouterWiFi_disappearCallbackRegister(BasayWiFi_RouterStatus_Callback cb) { _RouterWiFi_disappearCallback = cb; }
+    //для регистрации коллбэка привала сети пользователем
+    void onRouterWiFi_connectedCallbackRegister(BasayWiFi_RouterStatus_Callback cb) { _RouterWiFi_connectedCallback = cb; }
+
+    void begin(const char* apName = "Basay_Node_Config", 
                const char* hostName = "basay");
 
-    bool isAP() {  return (WiFi.status() != WL_CONNECTED); }
+    //bool isAP() {  return (WiFi.status() != WL_CONNECTED); }
     void handle(); 
     void resetSettings();
+    bool isRouterConnected ();
 
 private:
+    BasayWiFi_RouterStatus_Callback _RouterWiFi_disappearCallback = nullptr;
+    BasayWiFi_RouterStatus_Callback _RouterWiFi_connectedCallback = nullptr;
+   
+    void _updateWiFiState();
+    void _setupAP(bool wiFiFailed );
+    DNSServer _dnsServer;  
     String _finalHostname;
     const char* _rebootMsg;
-    bool isCaptiveModeDisabled = false;
-    bool BasayWiFi_ShowCaptivePortal = true;
+    bool _isWeStillNeedCaptiveMode = true;
+    bool _basayWiFi_ShowCaptivePortal = true;
+    bool _endpoints_reserved_allready = false;
+    bool _shouldReboot = false;
+    unsigned long _wifiCheckTimer = 0;
+    unsigned long _staConnectedTime = 0;
+    String _apName;
+
 };
 
 extern BasayWiFiManager BasayWiFi;
